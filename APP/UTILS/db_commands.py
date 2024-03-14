@@ -67,6 +67,14 @@ class UserDatabase:
             else:
                 print("User not found.")
                 return 0
+    
+    async def users_list(self):
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.cursor()
+            await cursor.execute("SELECT * FROM users")
+            users_list = await cursor.fetchone()
+            return users_list
+    # Написать функцию для чек план. На вход id, на выход имя и фамилия
 
 
 # Пример использования класса

@@ -210,3 +210,24 @@ async def edit_employer_permisson_permission(message: Message, state: FSMContext
         context_data = await state.get_data()
         await message.answer(f"{str(context_data)}", reply_markup=admin_reply_start)
         await state.clear()
+
+# =======================================================================================================================
+# Функция просмотра сотрудников
+    async def employers_list(message: Message, bot: Bot):
+        database = UserDatabase("users.db")
+        await database.create_table()
+        # Если права => 1, то админ, если 0, то пользователь, если none, то не пускать
+        # Если не зарегистрирован
+        if await database.search_user_by_id(message.from_user.id) == 0:
+            await message.answer(
+                f"<b>Привет, пользователь</b>\n Вы не зарегистрированны. Прошу обратитесь к менеджеру"
+            )
+        # Если зарегистрирован
+        elif await database.search_user_by_id(message.from_user.id) == 1:
+            await message.answer(f"Нет доступа", reply_markup=user_reply_start)
+        # Если админ
+        elif await database.search_user_by_id(message.from_user.id) >= 2:
+            #Тут команда выдачи списка
+            # Формат списка: 1. Иванов Иван, id 1234567890
+            # Сделать форматирование в классе дб, что бы при return приходил не список, а готовое сообщение
+            await message.answer(f"<b>Лови</b>", reply_markup=admin_reply_start)
