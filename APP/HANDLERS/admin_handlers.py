@@ -107,12 +107,13 @@ async def add_employer_permission(message: Message, state: FSMContext):
         await state.clear()
         return
     # Проверка Времени
-    elif int(message.text) <= 0:
+    elif message.text.isdigit() == False or int(message.text) <= 0:
         await message.answer(
             f" Некорректное заполнение - {message.text}.Проверьте правильность и запишите еще раз",
             reply_markup=cancel_button,
         )
         await state.set_state(add_employer.GET_PERMISSION)
+        return
     # Если все ок
     else:
         await message.answer(f"{message.text} - права. готово")
