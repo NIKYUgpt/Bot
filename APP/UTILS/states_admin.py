@@ -24,3 +24,6 @@ class delete_employeer(StatesGroup):
 class change_permissions(StatesGroup):
     GET_ID = State()
     GET_PERMISSION = State()
+
+class get_user_plan_today(StatesGroup):
+    GET_ID = State()

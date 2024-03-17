@@ -37,10 +37,10 @@ async def add_new_employer(message: Message, state: FSMContext):
         )
         await state.set_state(add_employer.GET_ID)
 
-
 async def add_new_employer_id(message: Message, state: FSMContext):
     database = UserDatabase("users.db")
     id = await database.search_user_by_id_admin(message.text)
+    print(message.text.isdigit())
     # Проверка команды отмены
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=admin_reply_start)
@@ -53,6 +53,14 @@ async def add_new_employer_id(message: Message, state: FSMContext):
             reply_markup=cancel_button,
         )
         await state.set_state(add_employer.GET_ID)
+    # Проверка цифрового значения
+    elif message.text.isdigit() == False:
+        await message.answer(
+            f"Некоректное значение {message.text}. Проверьте правильность и запишите еще раз",
+            reply_markup=cancel_button,
+        )
+        await state.set_state(add_employer.GET_ID)
+        return
     # Если все ок
     else:
         await message.answer(
@@ -61,7 +69,6 @@ async def add_new_employer_id(message: Message, state: FSMContext):
         )
         await state.update_data(id=message.text)
         await state.set_state(add_employer.GET_NAME)
-
 
 async def add_employer_name(message: Message, state: FSMContext):
     # Проверка команды отмены
@@ -78,7 +85,6 @@ async def add_employer_name(message: Message, state: FSMContext):
         await state.update_data(name=message.text)
         await state.set_state(add_employer.GET_SURNAME)
 
-
 async def add_employer_surname(message: Message, state: FSMContext):
     # Проверка команды отмены
     if str(message.text) == "Стоп":
@@ -93,7 +99,6 @@ async def add_employer_surname(message: Message, state: FSMContext):
         )
         await state.update_data(surname=message.text)
         await state.set_state(add_employer.GET_PERMISSION)
-
 
 async def add_employer_permission(message: Message, state: FSMContext):
     # Проверка команды отмены
@@ -110,12 +115,14 @@ async def add_employer_permission(message: Message, state: FSMContext):
         await state.set_state(add_employer.GET_PERMISSION)
     # Если все ок
     else:
-        await message.answer(f"{message.text} - дата. готово")
+        await message.answer(f"{message.text} - права. готово")
         await state.update_data(permission=message.text)
         context_data = await state.get_data()
+        database = UserDatabase("users.db")
+        print(context_data)
+        await database.add_user(context_data['id'], context_data['name'], context_data['surname'], context_data["permission"])
         await message.answer(f"{str(context_data)}", reply_markup=admin_reply_start)
         await state.clear()
-
 
 # =======================================================================================================================
 # Функция Удаления сотрудника
@@ -136,6 +143,8 @@ async def delete_employer(message: Message, state: FSMContext):
         
 async def delete_employer_id(message: Message, state: FSMContext):
         # Проверка команды отмены
+    database = UserDatabase("users.db")
+    id = await database.search_user_by_id_admin(message.text)
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=admin_reply_start)
         await state.clear()
@@ -144,7 +153,7 @@ async def delete_employer_id(message: Message, state: FSMContext):
     # ТУТ КОСЯК С ПОИСКОМ ПОЛЬЩОВАТЕЛЯ!!! ПРОВЕРИТЬ ВЕЗДЕ, КОГДА ПОДТЯНУ ПОЛЬЗОВАТЕЛЕЙ И БД
     elif str(id) == "0":
         await message.answer(f" Пользователь с id {message.text} не был найден. Проверьте правильность и запишите еще раз",reply_markup=cancel_button)
-        await state.set_state(delete_employer.GET_ID)
+        await state.set_state(delete_employeer.GET_ID)
         return
         # Если все ок
     else:
@@ -152,11 +161,11 @@ async def delete_employer_id(message: Message, state: FSMContext):
         await state.update_data(id=message.text)
         context_data = await state.get_data()
         await message.answer(f"{str(context_data)}", reply_markup=admin_reply_start)
+        await database.delete_user(context_data['id'])
         await state.clear()
         
 # =======================================================================================================================
 # Функция изменения прав сотрудника
-# Сделать класс стейта
 async def edit_employer_permisson(message: Message, state: FSMContext):
     database = UserDatabase("users.db")
     # ПО��У��
@@ -174,6 +183,8 @@ async def edit_employer_permisson(message: Message, state: FSMContext):
         
 async def edit_employer_permisson_id(message: Message, state: FSMContext):
         # Проверка команды отмены
+    database = UserDatabase("users.db")
+    id = await database.search_user_by_id_admin(message.text)
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=admin_reply_start)
         await state.clear()
@@ -193,6 +204,8 @@ async def edit_employer_permisson_id(message: Message, state: FSMContext):
         
 async def edit_employer_permisson_permission(message: Message, state: FSMContext):
         # Проверка команды отмены
+    database = UserDatabase("users.db")
+    id = await database.search_user_by_id_admin(message.text)
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=admin_reply_start)
         await state.clear()
@@ -209,25 +222,30 @@ async def edit_employer_permisson_permission(message: Message, state: FSMContext
         await state.update_data(permissions=message.text)
         context_data = await state.get_data()
         await message.answer(f"{str(context_data)}", reply_markup=admin_reply_start)
+        await database.change_permission(context_data['id'], context_data['permissions'])
         await state.clear()
 
 # =======================================================================================================================
-# Функция просмотра сотрудников
-    async def employers_list(message: Message, bot: Bot):
-        database = UserDatabase("users.db")
-        await database.create_table()
-        # Если права => 1, то админ, если 0, то пользователь, если none, то не пускать
-        # Если не зарегистрирован
-        if await database.search_user_by_id(message.from_user.id) == 0:
-            await message.answer(
-                f"<b>Привет, пользователь</b>\n Вы не зарегистрированны. Прошу обратитесь к менеджеру"
-            )
-        # Если зарегистрирован
-        elif await database.search_user_by_id(message.from_user.id) == 1:
-            await message.answer(f"Нет доступа", reply_markup=user_reply_start)
-        # Если админ
-        elif await database.search_user_by_id(message.from_user.id) >= 2:
-            #Тут команда выдачи списка
-            # Формат списка: 1. Иванов Иван, id 1234567890
-            # Сделать форматирование в классе дб, что бы при return приходил не список, а готовое сообщение
-            await message.answer(f"<b>Лови</b>", reply_markup=admin_reply_start)
+# Функция просмотра списка сотрудников
+async def employers_list(message: Message, bot: Bot):
+    database = UserDatabase("users.db")
+    await database.create_table()
+    # Если права => 1, то админ, если 0, то пользователь, если none, то не пускать
+    # Если не зарегистрирован
+    if await database.search_user_by_id(message.from_user.id) == 0:
+        await message.answer(
+            f"<b>Привет, пользователь</b>\n Вы не зарегистрированны. Прошу обратитесь к менеджеру"
+        )
+    # Если зарегистрирован
+    elif await database.search_user_by_id(message.from_user.id) == 1:
+        await message.answer(f"Нет доступа", reply_markup=user_reply_start)
+    # Если админ
+    elif await database.search_user_by_id(message.from_user.id) >= 2:
+        #Тут команда выдачи списка
+        # Формат списка: 1. Иванов Иван, id 1234567890
+        # Сделать форматирование в классе дб, что бы при return приходил не список, а готовое сообщение
+        list = await database.users_list()
+        await message.answer(f"<b>Лови</b>\n\n{list}", reply_markup=admin_reply_start)
+
+# =======================================================================================================================
+# 

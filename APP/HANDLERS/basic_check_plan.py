@@ -13,7 +13,7 @@ from APP.KEYBOARDS.reply import (
     date_selector,
     start_button,
 )
-
+from APP.UTILS.states_admin import get_user_plan_today
 
 async def check_plan(message: Message, state: FSMContext):
     database = UserDatabase("users.db")
@@ -23,15 +23,42 @@ async def check_plan(message: Message, state: FSMContext):
             f"<b>Привет, пользователь</b>\n Вы не зарегистрированны. Прошу обратитесь к менеджеру"
         )
     elif await database.search_user_by_id(message.from_user.id) == 1:
-        await message.answer(f"Введите название проекта", reply_markup=user_reply_start)
         id = message.from_user.id
-        ful_name = функция
+        full_name = await database.search_user_by_id_plan_list(id)
+        print(full_name)
+        await message.answer(f" {full_name} 3333333",reply_markup=user_reply_start)
     # Если админ
     elif await database.search_user_by_id(message.from_user.id) >= 2:
         await message.answer(
-            f"Заполнение плана пользователю. \n Введите id телеграма пользователя.\n Просмотреть список пользователей можно с помощь команды.",
+            f"Введите id телеграма пользователя.\n Просмотреть список пользователей можно с помощь команды.",
             reply_markup=cancel_button,
         )
         # Написать стейт для выбора пользователя
         # СТЕЙТ СОСТОИТ ИЗ ОДНОГО ПАРАМЕТРА. id Пользователя
-        await state.set_state(ТУТ_СТЕЙТ.GET_ID)
+        await state.set_state(get_user_plan_today.GET_ID)
+
+async def check_plan_id(message: Message, state: FSMContext):
+        # Проверка команды отмены
+    database = UserDatabase("users.db")
+    id = await database.search_user_by_id_admin(message.text)
+    if str(message.text) == "Стоп":
+        await message.answer("Вы отменили заполнение", reply_markup=admin_reply_start)
+        await state.clear()
+        return
+    # Проверка правильности id
+    # ТУТ КОСЯК С ПОИСКОМ ПОЛЬЩОВАТЕЛЯ!!! ПРОВЕРИТЬ ВЕЗДЕ, КОГДА ПОДТЯНУ ПОЛЬЗОВАТЕЛЕЙ И БД
+    elif str(id) == "0":
+        await message.answer(f" Пользователь с id {message.text} не был найден. Проверьте правильность и запишите еще раз",reply_markup=cancel_button)
+        await state.set_state(get_user_plan_today.GET_ID)
+        return
+        # Если все ок
+    else:
+        await state.update_data(id=message.text)
+        context_data = await state.get_data()
+        full_name = await database.search_user_by_id_plan_list(context_data['id'])
+        print(full_name)
+        await message.answer(f" {full_name} 22222",reply_markup=admin_reply_start)
+    
+        
+        
+        await state.clear()

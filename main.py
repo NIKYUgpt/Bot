@@ -5,12 +5,13 @@ from aiogram.filters import Command
 import asyncio
 import logging
 
-from APP.HANDLERS.basic import get_start
-from APP.HANDLERS import admin_handlers, basic
+from APP.HANDLERS.basic import get_start 
+from APP.HANDLERS.admin_handlers import employers_list
+from APP.HANDLERS import admin_handlers, basic, basic_check_plan
 from APP.UTILS.commands import set_commands
 from APP.UTILS.states_user import add_fact_user, add_plan_user
 from APP.settings import settings
-from APP.UTILS.states_admin import add_plan_admin, add_employer, delete_employeer, change_permissions
+from APP.UTILS.states_admin import add_plan_admin, add_employer, delete_employeer, change_permissions, get_user_plan_today
 
 
 # ========================================================================
@@ -78,15 +79,17 @@ async def Start():
     dp.message.register(admin_handlers.delete_employer_id, delete_employeer.GET_ID)
     # Изменение прав пользователя
     # ТУТ КОСЯК С ПОИСКОМ ПОЛЬЩОВАТЕЛЯ!!! ПРОВЕРИТЬ ВЕЗДЕ, КОГДА ПОДТЯНУ ПОЛЬЗОВАТЕЛЕЙ И БД
-    dp.message.register(admin_handlers.edit_employer_permisson, F.text == "Изменить права")
+    dp.message.register(admin_handlers.edit_employer_permisson, F.text == "Изменить права доспупа пользователя")
     dp.message.register(admin_handlers.edit_employer_permisson_id, change_permissions.GET_ID)
     dp.message.register(admin_handlers.edit_employer_permisson_permission, change_permissions.GET_PERMISSION)
+    # Просмотр плана
+    dp.message.register(basic_check_plan.check_plan, F.text == 'Просмотреть план')
     # Просмотр плана админ
-
+    dp.message.register(basic_check_plan.check_plan_id, get_user_plan_today.GET_ID)
     # Просмотр плана пользователь
 
     # Список пользователей
-
+    dp.message.register(employers_list, F.text == "Список пользователей")
     # Хелп админ
 
     # Хелп пользователь

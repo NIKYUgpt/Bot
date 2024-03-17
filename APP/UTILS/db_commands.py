@@ -38,13 +38,20 @@ class UserDatabase:
     async def delete_user(self, id_tg):
         async with aiosqlite.connect(self.db_name) as db:
             cursor = await db.cursor()
-            await cursor.execute("DELETE FROM users WHERE id_tg == ?", (id_tg,))
+            await cursor.execute("SELECT * FROM users WHERE id_tg=?", (id_tg,))
+            user = await cursor.fetchone()
+            if user is not None:
+                await cursor.execute(f"DELETE FROM users WHERE id_tg = {str(id_tg)}")
+                await db.commit()
+                print(id_tg, 'УДФЛЕН')
+            else:
+                print("User delited earler.")
 
     # Поиск пользователя
     async def search_user_by_id(self, id_tg):
         async with aiosqlite.connect(self.db_name) as db:
             cursor = await db.cursor()
-            await cursor.execute("SELECT * FROM users WHERE id_tg=?", (id_tg,))
+            await cursor.execute(f"SELECT * FROM users WHERE id_tg=?", (id_tg,))
             user = await cursor.fetchone()
 
             if user is not None:
@@ -68,15 +75,45 @@ class UserDatabase:
                 print("User not found.")
                 return 0
     
+    async def search_user_by_id_plan_list(self, id_tg):
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.cursor()
+            await cursor.execute("SELECT * FROM users WHERE id_tg=?", (id_tg,))
+            user = await cursor.fetchone()
+
+            if user is not None:
+                return f'{user[2]} {user[1]}'
+            else:
+                print("User not found.")
+                return 0
+
+
+    
     async def users_list(self):
         async with aiosqlite.connect(self.db_name) as db:
             cursor = await db.cursor()
             await cursor.execute("SELECT * FROM users")
-            users_list = await cursor.fetchone()
+            rows = await cursor.fetchall()
+            users_list = "\n".join([f"{row[2]} - {row[1]}. ID = {row[0]}. Доступ {row[3]}" for row in rows])
             return users_list
     # Написать функцию для чек план. На вход id, на выход имя и фамилия
+    # Просмотр пользователей
+    
 
 
+
+    # Смена прав
+    async def change_permission(self, id_tg, permission):
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.cursor()
+            await cursor.execute("SELECT * FROM users WHERE id_tg=?", (id_tg,))
+            user = await cursor.fetchone()
+            if user is not None:
+                await cursor.execute(f"UPDATE users SET permission = '{permission}' WHERE id_tg = {id_tg}")
+                await db.commit()
+                print(id_tg, 'Изменены права')
+            else:
+                print("User delited earler.")
 # Пример использования класса
 """
 async def main():
