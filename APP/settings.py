@@ -50,4 +50,6 @@ Time_list = [
     "23:00",
 ]
 
-Date_list = ["1234", "4321"]
+Date_list = ["20.03.2024", "21.03.2024"]
+credentials_file = 'credentials.json'
+Plan_sheet_key = '1JED99HzVcXP6HtQJ-vFHibCl1HB8TuESITHG_mL6J98'

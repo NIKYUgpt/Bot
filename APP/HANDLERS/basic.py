@@ -3,6 +3,7 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
 
+from APP.GS.test import GoogleSheetsManager
 from APP.UTILS.db_commands import UserDatabase
 
 from APP.KEYBOARDS.admin_reply import admin_reply_start
@@ -16,7 +17,7 @@ from APP.KEYBOARDS.reply import (
 
 from APP.UTILS.states_admin import add_plan_admin
 from APP.UTILS.states_user import add_plan_user, add_fact_user
-
+from APP.settings import Plan_sheet_key, Time_list, credentials_file
 
 from APP.settings import Date_list, Time_list
 
@@ -191,6 +192,8 @@ async def get_end_time_admin(message: Message, state: FSMContext):
 
 async def get_date_admin(message: Message, state: FSMContext):
     # Проверка команды отмены
+    database = UserDatabase("users.db")
+    GS_plan = GoogleSheetsManager(credentials_file, Plan_sheet_key)
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=admin_reply_start)
         await state.clear()
@@ -207,6 +210,28 @@ async def get_date_admin(message: Message, state: FSMContext):
         await message.answer(f"{message.text} - дата. готово")
         await state.update_data(date=message.text)
         context_data = await state.get_data()
+        name = await database.search_user_by_id_plan_list(context_data['id'])
+        print(name)
+        st = context_data['start_time']
+        et = context_data['end_time']
+        date = context_data['date']
+        project_name = context_data['project_name']
+        users_list = await database.users_list_sheet()
+        print(f"\n\n\n\n\n\n\n")
+        print(name)
+        print(st)
+        print(et)
+        print(date)
+        print(project_name)
+        print(f"\n\n\n\n\n\n\n")
+
+        if GS_plan.exist_sheet(f'{date} Plan') == False:
+            GS_plan.create_sheet(f'{date} Plan', 30, 25)
+            GS_plan.add_dates(Time_list)
+            GS_plan.add_employees(users_list)
+        else:
+            GS_plan.create_sheet(f'{date} Plan', 30, 25)
+        GS_plan.add_info(project_name, name, st, et)
         await message.answer(f"{str(context_data)}", reply_markup=admin_reply_start)
         await state.clear()
 
@@ -231,7 +256,7 @@ async def get_project_name_user(message: Message, state: FSMContext):
 
 
 async def get_start_time_user(message: Message, state: FSMContext):
-    database = UserDatabase("users.db")
+    
     # Проверка команды отмены
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=user_reply_start)
@@ -294,6 +319,8 @@ async def get_end_time_user(message: Message, state: FSMContext):
 
 async def get_date_user(message: Message, state: FSMContext):
     # Проверка команды отмены
+    database = UserDatabase("users.db")
+    GS_plan = GoogleSheetsManager(credentials_file, Plan_sheet_key)
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=user_reply_start)
         await state.clear()
@@ -310,6 +337,30 @@ async def get_date_user(message: Message, state: FSMContext):
         await message.answer(f"{message.text} - дата. готово")
         await state.update_data(date=message.text)
         context_data = await state.get_data()
+        # Часто надо
+        name = await database.search_user_by_id_plan_list(context_data['id'])
+        # ===============================================================
+        print(name)
+        st = context_data['start_time']
+        et = context_data['end_time']
+        date = context_data['date']
+        project_name = context_data['project_name']
+        users_list = await database.users_list_sheet()
+        print(f"\n\n\n\n\n\n\n")
+        print(name)
+        print(st)
+        print(et)
+        print(date)
+        print(project_name)
+        print(f"\n\n\n\n\n\n\n")
+
+        if GS_plan.exist_sheet(f'{date} Plan') == False:
+            GS_plan.create_sheet(f'{date} Plan', 30, 25)
+            GS_plan.add_dates(Time_list)
+            GS_plan.add_employees(users_list)
+        else:
+            GS_plan.create_sheet(f'{date} Plan', 30, 25)
+        GS_plan.add_info(project_name, name, st, et)
         await message.answer(f"{str(context_data)}", reply_markup=user_reply_start)
         await state.clear()
 

@@ -1,8 +1,10 @@
+import datetime
 from aiogram import Bot
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
 
+from APP.GS.test import GoogleSheetsManager
 from APP.UTILS.db_commands import UserDatabase
 
 from APP.KEYBOARDS.admin_reply import admin_reply_start
@@ -15,6 +17,7 @@ from APP.KEYBOARDS.reply import (
 )
 
 from APP.UTILS.states_admin import add_employer, delete_employeer, change_permissions
+from APP.settings import Plan_sheet_key, Time_list, credentials_file
 
 
 # =======================================================================================================================
@@ -102,6 +105,7 @@ async def add_employer_surname(message: Message, state: FSMContext):
 
 async def add_employer_permission(message: Message, state: FSMContext):
     # Проверка команды отмены
+    GS_plan = GoogleSheetsManager(credentials_file, Plan_sheet_key)
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=admin_reply_start)
         await state.clear()
@@ -122,6 +126,12 @@ async def add_employer_permission(message: Message, state: FSMContext):
         database = UserDatabase("users.db")
         print(context_data)
         await database.add_user(context_data['id'], context_data['name'], context_data['surname'], context_data["permission"])
+        # =======================================================================================
+        GS_plan.create_sheet(f'{datetime.datetime.now().strftime("%d.%m.%Y Plan")}', 30, 25)
+        surname = context_data['surname']
+        name = context_data['name']
+        GS_plan.add_employee(f'{surname} {name}')
+        # =======================================================================================
         await message.answer(f"{str(context_data)}", reply_markup=admin_reply_start)
         await state.clear()
 
@@ -145,6 +155,7 @@ async def delete_employer(message: Message, state: FSMContext):
 async def delete_employer_id(message: Message, state: FSMContext):
         # Проверка команды отмены
     database = UserDatabase("users.db")
+    # Тестовый
     id = await database.search_user_by_id_admin(message.text)
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=admin_reply_start)
@@ -160,9 +171,11 @@ async def delete_employer_id(message: Message, state: FSMContext):
     else:
         await message.answer(f"Пользователь с id {message.text} удален", reply_markup=admin_reply_start)
         await state.update_data(id=message.text)
+        # Тестовый
         context_data = await state.get_data()
         await message.answer(f"{str(context_data)}", reply_markup=admin_reply_start)
         await database.delete_user(context_data['id'])
+
         await state.clear()
         
 # =======================================================================================================================
@@ -191,8 +204,6 @@ async def edit_employer_permisson_id(message: Message, state: FSMContext):
         await state.clear()
         return
     # Проверка правильности id
-    # ТУТ КОСЯК С ПОИСКОМ ПОЛЬЩОВАТЕЛЯ!!! ПРОВЕРИТЬ ВЕЗДЕ, КОГДА ПОДТЯНУ ПОЛЬЗОВАТЕЛЕЙ И БД
-    # МБ НАДО ПОДТЯНУТЬ ПРОВЕРКУ ПРАВ, НО ХЗ
     elif str(id) == "0":
         await message.answer(f" Пользователь с id {message.text} не был найден. Проверьте правильность и запишите еще раз",reply_markup=cancel_button)
         await state.set_state(change_permissions.GET_ID)
@@ -206,7 +217,6 @@ async def edit_employer_permisson_id(message: Message, state: FSMContext):
 async def edit_employer_permisson_permission(message: Message, state: FSMContext):
         # Проверка команды отмены
     database = UserDatabase("users.db")
-    id = await database.search_user_by_id_admin(message.text)
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=admin_reply_start)
         await state.clear()
@@ -243,10 +253,10 @@ async def employers_list(message: Message, bot: Bot):
     # Если админ
     elif await database.search_user_by_id(message.from_user.id) >= 2:
         #Тут команда выдачи списка
-        # Формат списка: 1. Иванов Иван, id 1234567890
-        # Сделать форматирование в классе дб, что бы при return приходил не список, а готовое сообщение
         list = await database.users_list()
         await message.answer(f"<b>Лови</b>\n\n{list}", reply_markup=admin_reply_start)
+        print('=============================================================\n\n\n\n\n')
+        
 
 # =======================================================================================================================
 # 

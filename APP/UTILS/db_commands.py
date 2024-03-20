@@ -98,7 +98,14 @@ class UserDatabase:
             return users_list
     # Написать функцию для чек план. На вход id, на выход имя и фамилия
     # Просмотр пользователей
-    
+        
+    async def users_list_sheet(self):
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.cursor()
+            await cursor.execute("SELECT surname, name FROM users")
+            rows = await cursor.fetchall()
+            users_list = [f'{row[0]} {row[1]}' for row in rows]
+            return users_list
 
 
 

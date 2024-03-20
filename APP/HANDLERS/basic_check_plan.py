@@ -1,8 +1,10 @@
+import datetime
 from aiogram import Bot
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
 
+from APP.GS.test import GoogleSheetsManager
 from APP.UTILS.db_commands import UserDatabase
 
 from APP.KEYBOARDS.admin_reply import admin_reply_start
@@ -14,9 +16,10 @@ from APP.KEYBOARDS.reply import (
     start_button,
 )
 from APP.UTILS.states_admin import get_user_plan_today
-
+from APP.settings import Plan_sheet_key, Time_list, credentials_file
 async def check_plan(message: Message, state: FSMContext):
     database = UserDatabase("users.db")
+    GS_plan = GoogleSheetsManager(credentials_file, Plan_sheet_key)
     # ПОХУЙ
     if await database.search_user_by_id(message.from_user.id) == 0:
         await message.answer(
@@ -25,8 +28,10 @@ async def check_plan(message: Message, state: FSMContext):
     elif await database.search_user_by_id(message.from_user.id) == 1:
         id = message.from_user.id
         full_name = await database.search_user_by_id_plan_list(id)
+        GS_plan.create_sheet(f'{datetime.datetime.now().strftime("%d.%m.%Y Plan")}', 30, 25)
+        list =  GS_plan.get_values(full_name)
         print(full_name)
-        await message.answer(f" {full_name} 3333333",reply_markup=user_reply_start)
+        await message.answer(f" {full_name} Лови \n {list}",reply_markup=user_reply_start)
     # Если админ
     elif await database.search_user_by_id(message.from_user.id) >= 2:
         await message.answer(
@@ -40,6 +45,7 @@ async def check_plan(message: Message, state: FSMContext):
 async def check_plan_id(message: Message, state: FSMContext):
         # Проверка команды отмены
     database = UserDatabase("users.db")
+    GS_plan = GoogleSheetsManager(credentials_file, Plan_sheet_key)
     id = await database.search_user_by_id_admin(message.text)
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=admin_reply_start)
@@ -57,7 +63,9 @@ async def check_plan_id(message: Message, state: FSMContext):
         context_data = await state.get_data()
         full_name = await database.search_user_by_id_plan_list(context_data['id'])
         print(full_name)
-        await message.answer(f" {full_name} 22222",reply_markup=admin_reply_start)
+        GS_plan.create_sheet(f'{datetime.datetime.now().strftime("%d.%m.%Y Plan")}', 30, 25)
+        list =  GS_plan.get_values(full_name)
+        await message.answer(f" {full_name} \n {list}",reply_markup=admin_reply_start)
     
         
         

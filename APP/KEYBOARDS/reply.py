@@ -55,7 +55,7 @@ cancel_button = ReplyKeyboardMarkup(
 )
 
 date_selector = ReplyKeyboardMarkup(
-    keyboard=[[KeyboardButton(text="1234")]],
+    keyboard=[[KeyboardButton(text="20.03.2024"), KeyboardButton(text="21.03.2024")]],
     resize_keyboard=True,
     one_time_keyboard=True,
     input_field_placeholder="Выбери кнопку",
