@@ -231,6 +231,7 @@ async def get_date_admin(message: Message, state: FSMContext):
             GS_plan.add_employees(users_list)
         else:
             GS_plan.create_sheet(f'{date} Plan', 30, 25)
+            GS_plan.add_employee(name)
         GS_plan.add_info(project_name, name, st, et)
         await message.answer(f"{str(context_data)}", reply_markup=admin_reply_start)
         await state.clear()
@@ -360,6 +361,7 @@ async def get_date_user(message: Message, state: FSMContext):
             GS_plan.add_employees(users_list)
         else:
             GS_plan.create_sheet(f'{date} Plan', 30, 25)
+            GS_plan.add_employee(name)
         GS_plan.add_info(project_name, name, st, et)
         await message.answer(f"{str(context_data)}", reply_markup=user_reply_start)
         await state.clear()

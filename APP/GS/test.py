@@ -1,5 +1,6 @@
 # gs key 1JED99HzVcXP6HtQJ-vFHibCl1HB8TuESITHG_mL6J98
 
+import calendar
 import datetime
 import gspread
 from gspread.exceptions import APIError
@@ -35,7 +36,7 @@ class GoogleSheetsManager:
             "20:00",
             "21:00",
             "22:00",
-            "23:00"
+            "23:00",
         ]
 
     def create_sheet(self, title, rows, cols):
@@ -133,14 +134,13 @@ class GoogleSheetsManager:
         if self.worksheet is not None:
             try:
                 values = []
-                times = []
                 row = self.worksheet.find(employee_name).row
                 # print(row)
                 # print(f'\n\n\n\n\n')
                 for col in range(2, 26):
                     value = self.worksheet.cell(row, col).value
                     if value == None:
-                        values.append('Ничего')
+                        values.append("Ничего")
                     else:
                         values.append(value)
             except APIError as e:
@@ -161,13 +161,109 @@ credentials_path = "credentials.json"
 spreadsheet_key = "1JED99HzVcXP6HtQJ-vFHibCl1HB8TuESITHG_mL6J98"
 
 
-#gsm = GoogleSheetsManager(credentials_path, spreadsheet_key)
-#gsm.create_sheet(f'{datetime.datetime.now().strftime("%d.%m.%Y Plan")}', 30, 25)
-#print(gsm.get_values("Юдин Никита"))
+# gsm = GoogleSheetsManager(credentials_path, spreadsheet_key)
+# gsm.create_sheet(f'{datetime.datetime.now().strftime("%d.%m.%Y Plan")}', 30, 25)
+# print(gsm.get_values("Юдин Никита"))
 # employees = ['John Doe', 'Jane Smith', 'Bob Johnson']
 # gsm.add_employees(employees)
 
 dates = ["2022-01-01", "2022-01-02", "2022-01-03"]
+# gsm.add_dates(Time_list)
+# gsm.add_employee("John Doe")
+# gsm.add_info('value', 'John Doe', '0:00', '15:00')
+
+
+class GoogleSheetsManagerFact:
+    def __init__(self, credentials_path, spreadsheet_key):
+        self.gc = gspread.service_account(filename=credentials_path)
+        self.spreadsheet = self.gc.open_by_key(spreadsheet_key)
+        self.worksheet = None
+        self.worksheets = self.spreadsheet.worksheets()
+
+    def create_sheet(self, title, rows, cols):
+        existing_sheet = None
+        for sheet in self.worksheets:
+            if title == sheet.title:
+                existing_sheet = sheet
+                break
+        if existing_sheet is not None:
+            self.worksheet = existing_sheet
+            print(f"Selected existing sheet '{title}'.")
+        else:
+            try:
+                self.worksheet = self.spreadsheet.add_worksheet(
+                    title=title, rows=rows, cols=cols
+                )
+                self.worksheets = self.spreadsheet.worksheets()
+                print(f"Created new sheet '{title}'.")
+            except APIError as e:
+                print(f"Error creating sheet: {e}")
+
+    def add_dates(self, dates):
+        if self.worksheet is not None:
+            self.worksheet.update_cell(1, 1, 'Проект/дата')
+            row = 2
+            for date in dates:
+                try:
+                    self.worksheet.update_cell(1, row, date)
+                    row += 1
+                except APIError as e:
+                    print(f"Error adding date: {e}")
+        else:
+            print("No worksheet is selected.")
+
+    def add_project(self, project_title):
+        if self.worksheet is not None:
+            col = 1
+            while True:
+                try:
+                    cell_value = self.worksheet.cell(col, 1).value
+                    print(cell_value)
+                    if (cell_value == None) or (cell_value == project_title):
+                        self.worksheet.update_cell(col, 1, project_title)
+                        break
+                    col += 1
+                except APIError as e:
+                    print(f"Error adding employee: {e}")
+                    break
+            print(f"Added project info '{project_title}' to the worksheet.")
+        else:
+            print("No worksheet is selected.")
+
+    def add_info(self, value, project_name, date):
+        if self.worksheet is not None:
+            try:
+                row = self.worksheet.find(project_name).row
+                col = self.worksheet.find(date).col
+                print(f'\n\n\n\n===================================')
+                print(row, col)
+                print(f'\n\n\n\n===================================')
+                self.worksheet.update_cell(row, col, value)
+            except gspread.CellNotFound:
+                print(f"Employee '{project_name}' or timestamps '{date}'.")
+            except APIError as e:
+                print(f"Error adding info: {e}")
+        else:
+            print("No worksheet is selected.")
+
+today = datetime.date.today()
+Fact_sheet_key = '1KadOW7sNEFD291vCrCKJ1l6056MINJGXhM1ccXDGgno'
+# Получаем текущую дату
+today = datetime.date.today()
+# Получаем количество дней в текущем месяце
+_, num_days = calendar.monthrange(today.year, today.month)
+# Создаем список чисел текущего месяца
+month_numbers = list(range(1, num_days+1))
+
+print(month_numbers)
+gsmf = GoogleSheetsManagerFact(credentials_path, Fact_sheet_key)
+gsmf.create_sheet(f'{datetime.date.today().month} fact', 30, 33)
+gsmf.add_dates(month_numbers)
+gsmf.add_project('Проект 1')
+gsmf.add_info('Комментарий', 'Проект 1', '5')
+# gsm.add_employees(employees)
+
+#dates = ["2022-01-01", "2022-01-02", "2022-01-03"]
 # gsm.add_dates(Time_list)
 # gsm.add_employee("John Doe")
 # gsm.add_info('value', 'John Doe', '0:00', '15:00')
