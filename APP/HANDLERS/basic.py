@@ -1,9 +1,11 @@
+import datetime
 from aiogram import Bot
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
 
-from APP.GS.test import GoogleSheetsManager
+from APP.GS.test import GoogleSheetsManager, GoogleSheetsManagerFact, get_minth_list
+from APP.UTILS.commands import check_date_format
 from APP.UTILS.db_commands import UserDatabase
 
 from APP.KEYBOARDS.admin_reply import admin_reply_start
@@ -17,7 +19,7 @@ from APP.KEYBOARDS.reply import (
 
 from APP.UTILS.states_admin import add_plan_admin
 from APP.UTILS.states_user import add_plan_user, add_fact_user
-from APP.settings import Plan_sheet_key, Time_list, credentials_file
+from APP.settings import Fact_sheet_key, Plan_sheet_key, Time_list, credentials_file
 
 from APP.settings import Date_list, Time_list
 
@@ -500,7 +502,7 @@ async def get_date_fact(message: Message, state: FSMContext):
         await state.clear()
         return
     # Проверка Времени
-    elif message.text not in Date_list:
+    elif not check_date_format(message.text):
         await message.answer(
             f" Некорректное заполнение - {message.text}.Проверьте правильность и запишите еще раз",
             reply_markup=date_selector,
@@ -513,7 +515,24 @@ async def get_date_fact(message: Message, state: FSMContext):
         context_data = await state.get_data()
         database = UserDatabase("users.db")
         await database.create_table()
-
+        user = await database.search_user_by_id_plan_list(message.from_user.id)
+        
+        st = context_data['start_time']
+        et = context_data['end_time']
+        date = context_data['date']
+        project_name = context_data['project_name']
+        project_comment = context_data['project_comment']
+        gs_value = f'{st} - {et}. {project_comment}'
+        dates = get_minth_list(datetime.date.today())
+        day = str(date.split(".")[0])
+        gsmf = GoogleSheetsManagerFact(credentials_file, Fact_sheet_key)
+        gsmf.create_sheet(f'{date.split(".")[1]} {date.split(".")[2]} {user} fact', 30, 33)
+        gsmf.add_dates(dates)
+        gsmf.add_project(project_name)
+        gsmf.add_info(gs_value, project_name, day)
+        
+        
+        
         # Если зарегистрирован
         if await database.search_user_by_id(message.from_user.id) == 1:
             await message.answer(f"{str(context_data)}", reply_markup=user_reply_start)

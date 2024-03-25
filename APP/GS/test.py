@@ -246,21 +246,23 @@ class GoogleSheetsManagerFact:
         else:
             print("No worksheet is selected.")
 
-today = datetime.date.today()
-Fact_sheet_key = '1KadOW7sNEFD291vCrCKJ1l6056MINJGXhM1ccXDGgno'
-# Получаем текущую дату
-today = datetime.date.today()
-# Получаем количество дней в текущем месяце
-_, num_days = calendar.monthrange(today.year, today.month)
-# Создаем список чисел текущего месяца
-month_numbers = list(range(1, num_days+1))
 
-print(month_numbers)
-gsmf = GoogleSheetsManagerFact(credentials_path, Fact_sheet_key)
-gsmf.create_sheet(f'{datetime.date.today().month} fact', 30, 33)
-gsmf.add_dates(month_numbers)
-gsmf.add_project('Проект 1')
-gsmf.add_info('Комментарий', 'Проект 1', '5')
+Fact_sheet_key = '1KadOW7sNEFD291vCrCKJ1l6056MINJGXhM1ccXDGgno'
+def get_minth_list(td):
+# Получаем текущую дату
+    today = td 
+# Получаем количество дней в текущем месяце
+    _, num_days = calendar.monthrange(today.year, today.month)
+# Создаем список чисел текущего месяца
+    month_numbers = list(range(1, num_days+1))
+    return month_numbers
+
+#print(month_numbers)
+#gsmf = GoogleSheetsManagerFact(credentials_path, Fact_sheet_key)
+#gsmf.create_sheet(f'{datetime.date.today().month} fact', 30, 33)
+#gsmf.add_dates(month_numbers)
+#gsmf.add_project('Проект 1')
+#gsmf.add_info('Комментарий', 'Проект 1', '5')
 # gsm.add_employees(employees)
 
 #dates = ["2022-01-01", "2022-01-02", "2022-01-03"]
