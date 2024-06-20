@@ -1,7 +1,7 @@
 import datetime
-from aiogram import Bot
-from aiogram.types import Message
-from aiogram.fsm.context import FSMContext
+from aiogram import Bot # type: ignore
+from aiogram.types import Message # type: ignore
+from aiogram.fsm.context import FSMContext # type: ignore
 
 
 from APP.GS.test import GoogleSheetsManager
@@ -43,7 +43,7 @@ async def add_new_employer(message: Message, state: FSMContext):
 async def add_new_employer_id(message: Message, state: FSMContext):
     database = UserDatabase("users.db")
     id = await database.search_user_by_id_admin(message.text)
-    print(message.text.isdigit())
+    #print(message.text.isdigit())
     # Проверка команды отмены
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=admin_reply_start)
@@ -124,7 +124,7 @@ async def add_employer_permission(message: Message, state: FSMContext):
         await state.update_data(permission=message.text)
         context_data = await state.get_data()
         database = UserDatabase("users.db")
-        print(context_data)
+        #print(context_data)
         await database.add_user(context_data['id'], context_data['name'], context_data['surname'], context_data["permission"])
         # =======================================================================================
         GS_plan.create_sheet(f'{datetime.datetime.now().strftime("%d.%m.%Y Plan")}', 30, 25)
@@ -255,7 +255,7 @@ async def employers_list(message: Message, bot: Bot):
         #Тут команда выдачи списка
         list = await database.users_list()
         await message.answer(f"<b>Лови</b>\n\n{list}", reply_markup=admin_reply_start)
-        print('=============================================================\n\n\n\n\n')
+        #print('=============================================================\n\n\n\n\n')
         
 
 # =======================================================================================================================

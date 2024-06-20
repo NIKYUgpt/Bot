@@ -1,8 +1,8 @@
-import datetime
-from aiogram import Bot
-from aiogram.types import Message
-from aiogram.fsm.context import FSMContext
-
+import datetime as DTm
+from aiogram import Bot # type: ignore
+from aiogram.types import Message # type: ignore
+from aiogram.fsm.context import FSMContext # type: ignore
+from datetime import datetime, timedelta, date
 
 from APP.GS.test import GoogleSheetsManager, GoogleSheetsManagerFact, get_minth_list
 from APP.UTILS.commands import check_date_format
@@ -196,12 +196,17 @@ async def get_date_admin(message: Message, state: FSMContext):
     # Проверка команды отмены
     database = UserDatabase("users.db")
     GS_plan = GoogleSheetsManager(credentials_file, Plan_sheet_key)
+    # Генерация списка допустимых дат (например, ближайшие 7 дней) в формате dd.mm.yyyy
+    today = datetime.today().date()
+    allowed_dates = [(today + timedelta(days=i)).strftime('%d.%m.%Y') for i in range(7)]
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=admin_reply_start)
         await state.clear()
         return
+    
+    
     # Проверка Времени
-    elif message.text not in Date_list:
+    elif message.text not in allowed_dates:
         await message.answer(
             f" Некорректное заполнение - {message.text}.Проверьте правильность и запишите еще раз",
             reply_markup=date_selector,
@@ -213,19 +218,19 @@ async def get_date_admin(message: Message, state: FSMContext):
         await state.update_data(date=message.text)
         context_data = await state.get_data()
         name = await database.search_user_by_id_plan_list(context_data['id'])
-        print(name)
+        #print(name)
         st = context_data['start_time']
         et = context_data['end_time']
         date = context_data['date']
         project_name = context_data['project_name']
         users_list = await database.users_list_sheet()
-        print(f"\n\n\n\n\n\n\n")
-        print(name)
-        print(st)
-        print(et)
-        print(date)
-        print(project_name)
-        print(f"\n\n\n\n\n\n\n")
+        #print(f"\n\n\n\n\n\n\n")
+        #print(name)
+        #print(st)
+        #print(et)
+        #print(date)
+        #print(project_name)
+        #print(f"\n\n\n\n\n\n\n")
 
         if GS_plan.exist_sheet(f'{date} Plan') == False:
             GS_plan.create_sheet(f'{date} Plan', 30, 25)
@@ -324,12 +329,15 @@ async def get_date_user(message: Message, state: FSMContext):
     # Проверка команды отмены
     database = UserDatabase("users.db")
     GS_plan = GoogleSheetsManager(credentials_file, Plan_sheet_key)
+    # Генерация списка допустимых дат (например, ближайшие 7 дней) в формате dd.mm.yyyy
+    today = datetime.today().date()
+    allowed_dates = [(today + timedelta(days=i)).strftime('%d.%m.%Y') for i in range(7)]
     if str(message.text) == "Стоп":
         await message.answer("Вы отменили заполнение", reply_markup=user_reply_start)
         await state.clear()
         return
     # Проверка Времени
-    elif message.text not in Date_list:
+    elif message.text not in allowed_dates:
         await message.answer(
             f" Некорректное заполнение - {message.text}.Проверьте правильность и запишите еще раз",
             reply_markup=date_selector,
@@ -343,19 +351,19 @@ async def get_date_user(message: Message, state: FSMContext):
         # Часто надо
         name = await database.search_user_by_id_plan_list(context_data['id'])
         # ===============================================================
-        print(name)
+        #print(name)
         st = context_data['start_time']
         et = context_data['end_time']
         date = context_data['date']
         project_name = context_data['project_name']
         users_list = await database.users_list_sheet()
-        print(f"\n\n\n\n\n\n\n")
-        print(name)
-        print(st)
-        print(et)
-        print(date)
-        print(project_name)
-        print(f"\n\n\n\n\n\n\n")
+        #print(f"\n\n\n\n\n\n\n")
+        #print(name)
+        #print(st)
+        #print(et)
+        #print(date)
+        #print(project_name)
+        #print(f"\n\n\n\n\n\n\n")
 
         if GS_plan.exist_sheet(f'{date} Plan') == False:
             GS_plan.create_sheet(f'{date} Plan', 30, 25)
@@ -365,7 +373,8 @@ async def get_date_user(message: Message, state: FSMContext):
             GS_plan.create_sheet(f'{date} Plan', 30, 25)
             GS_plan.add_employee(name)
         GS_plan.add_info(project_name, name, st, et)
-        await message.answer(f"{str(context_data)}", reply_markup=user_reply_start)
+        #await message.answer(f"{str(context_data)}", reply_markup=user_reply_start)
+        await message.answer(f"Готово", reply_markup=user_reply_start)
         await state.clear()
 
 
@@ -523,7 +532,7 @@ async def get_date_fact(message: Message, state: FSMContext):
         project_name = context_data['project_name']
         project_comment = context_data['project_comment']
         gs_value = f'{st} - {et}. {project_comment}'
-        dates = get_minth_list(datetime.date.today())
+        dates = get_minth_list(DTm.date.today())
         day = str(date.split(".")[0])
         gsmf = GoogleSheetsManagerFact(credentials_file, Fact_sheet_key)
         gsmf.create_sheet(f'{date.split(".")[1]} {date.split(".")[2]} {user} fact', 30, 33)
@@ -535,7 +544,7 @@ async def get_date_fact(message: Message, state: FSMContext):
         
         # Если зарегистрирован
         if await database.search_user_by_id(message.from_user.id) == 1:
-            await message.answer(f"{str(context_data)}", reply_markup=user_reply_start)
+            await message.answer(f"Готово", reply_markup=user_reply_start)
         # Если админ
         elif await database.search_user_by_id(message.from_user.id) >= 2:
             await message.answer(f"{str(context_data)}", reply_markup=admin_reply_start)

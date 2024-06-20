@@ -1,7 +1,7 @@
 import datetime
-from aiogram import Bot
-from aiogram.types import Message
-from aiogram.fsm.context import FSMContext
+from aiogram import Bot # type: ignore
+from aiogram.types import Message # type: ignore
+from aiogram.fsm.context import FSMContext # type: ignore
 
 
 from APP.GS.test import GoogleSheetsManager

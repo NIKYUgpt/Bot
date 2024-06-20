@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, KeyboardButtonPollType
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, KeyboardButtonPollType # type: ignore
 
 user_reply_start = ReplyKeyboardMarkup(
     keyboard=[
@@ -8,8 +8,7 @@ user_reply_start = ReplyKeyboardMarkup(
             KeyboardButton(text="Список пользователей"),
         ],
         [
-            KeyboardButton(text="Просмотреть план"),
-            KeyboardButton(text="Помощь"),
+            KeyboardButton(text="Просмотреть план")
         ],
     ],
     resize_keyboard=True,
